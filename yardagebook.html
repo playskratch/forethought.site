@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>YardageBook JSON Generator</title>
+
+<style>
+:root{
+  --bg:#0b0c0f;
+  --card:#12141a;
+  --muted:#8a90a0;
+  --text:#eef0f6;
+  --border:rgba(255,255,255,.10);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --accent:#2d7dff;
+  --danger:#ff4d4d;
+  --ok:#35c759;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f4f5f8;--card:#fff;--muted:#5b6270;--text:#101216;
+    --border:rgba(0,0,0,.10);--shadow:0 10px 30px rgba(0,0,0,.12);
+    --accent:#1b66ff;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;padding:20px 16px;background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent);backdrop-filter:blur(10px)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+h1{margin:0;font-size:22px}
+.sub{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+.grid{display:grid;gap:12px}
+@media(min-width:900px){.grid{grid-template-columns:1.1fr .9fr}}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+label{font-size:12px;color:var(--muted)}
+input,textarea{
+  width:100%;border-radius:12px;border:1px solid var(--border);
+  background:rgba(255,255,255,.03);color:var(--text);
+  padding:10px 12px;font-size:14px
+}
+button{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  padding:10px 12px;border-radius:12px;cursor:pointer
+}
+button.primary{background:var(--accent);border:none;color:#fff;font-weight:600}
+button.danger{background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.35)}
+table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+th,td{padding:10px;border-bottom:1px solid var(--border)}
+th{font-size:12px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.drop{
+  border:1px dashed var(--border);
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+.drop.drag{border-color:var(--accent);background:rgba(45,125,255,.12);color:var(--text)}
+
+@media print{
+  @page{size:A6 portrait;margin:8mm}
+  body{background:#fff;color:#000}
+  header,.btnRow,.hint,.drop{display:none!important}
+  .card{box-shadow:none;border:none;padding:0}
+  th,td{font-size:12px;color:#000}
+  body[data-print="yardages"] .wedge{display:none}
+  body[data-print="wedges"] .yardages{display:none}
+}
+.compat{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:var(--muted);
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+}
+
+.compat .dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 0 3px rgba(53,199,89,.15);
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <h1>YardageBook JSON Generator</h1>
+    <div class="sub">Creates <span class="mono">YardageBook.json</span> for Lesson Logger</div>
+
+    <div class="compat">
+      <span class="dot"></span>
+      ForeThought export compatible
+    </div>
+    <div class="compat" title="This file format is identical to ForeThought exports and can be used interchangeably in Lesson Logger.">
+  </div>
+</header>
+
+<main class="wrap">
+<div class="grid">
+
+<!-- LEFT -->
+<section class="card">
+
+  <label>Clubs</label>
+  <table class="yardages">
+    <thead><tr><th>Club</th><th>Carry</th><th>Total</th><th></th></tr></thead>
+    <tbody id="clubBody"></tbody>
+  </table>
+  <div class="hint">Tip: Use any naming you like (e.g. <span class="mono">7i</span>, <span class="mono">3W</span>, <span class="mono">Wedge 50°</span>)</div>
+  <button id="addClub" class="primary">+ Add club</button>
+
+  <hr style="margin:16px 0">
+
+  <label>Wedge Matrix</label>
+  <table class="wedge">
+    <thead>
+      <tr><th>Wedge</th><th>¼</th><th>½</th><th>¾</th><th>Full</th><th></th></tr>
+    </thead>
+    <tbody id="wedgeBody"></tbody>
+  </table>
+  <div class="hint">Optional. Unlimited wedges. Leave empty if not needed.</div>
+  <button id="addWedge">+ Add wedge</button>
+
+  <div class="btnRow">
+    <button class="primary" id="download">Download JSON</button>
+    <button onclick="printYardages()">Print Yardages (A6)</button>
+    <button onclick="printWedges()">Print Wedges (A6)</button>
+  </div>
+</section>
+<section>
+    <div class="hint">
+        The file you download can be stored in <b>Files</b> (“On My iPhone/iPad” or iCloud Drive).
+        In Lesson Logger, use <b>Yardages → Link YardageBook.json</b> to select it once.
+      </div>
+    </section>
+<!-- RIGHT -->
+<section class="card">
+
+  <label>Import existing YardageBook.json</label>
+  <div class="drop" id="dropZone">
+    Drag & drop a JSON file here<br><br>
+    <button id="importBtn">Choose file…</button>
+    <input id="importFile" type="file" accept="application/json" hidden>
+  </div>
+  <div class="hint">
+    Handy if you exported from ForeThought or want to tweak an existing file.
+  </div>
+
+  <div style="margin-top:14px">
+    <label>Live JSON preview</label>
+    <textarea id="preview" rows="22" class="mono" readonly></textarea>
+  </div>
+
+</section>
+
+</div>
+</main>
+
+<script>
+let state={ clubs:[], wedgeMatrix:[] };
+
+function render(){
+  clubBody.innerHTML="";
+  state.clubs.forEach((c,i)=>{
+    clubBody.innerHTML+=`
+      <tr>
+        <td><input value="${c.name||""}" oninput="state.clubs[${i}].name=this.value;sync()"></td>
+        <td><input value="${c.carry||""}" oninput="state.clubs[${i}].carry=+this.value;sync()"></td>
+        <td><input value="${c.total||""}" oninput="state.clubs[${i}].total=+this.value;sync()"></td>
+        <td><button onclick="state.clubs.splice(${i},1);render();sync()">✕</button></td>
+      </tr>`;
+  });
+
+  wedgeBody.innerHTML="";
+  state.wedgeMatrix.forEach((w,i)=>{
+    wedgeBody.innerHTML+=`
+      <tr>
+        <td><input value="${w.name||""}" oninput="w.name=this.value;sync()"></td>
+        <td><input value="${w.q||""}" oninput="w.q=+this.value;sync()"></td>
+        <td><input value="${w.h||""}" oninput="w.h=+this.value;sync()"></td>
+        <td><input value="${w.tq||""}" oninput="w.tq=+this.value;sync()"></td>
+        <td><input value="${w.f||""}" oninput="w.f=+this.value;sync()"></td>
+        <td><button onclick="state.wedgeMatrix.splice(${i},1);render();sync()">✕</button></td>
+      </tr>`;
+  });
+
+  sync();
+}
+
+function buildJSON(){
+  const j={
+    type:"yardageBook",
+    generatedAt:new Date().toISOString(),
+    source:"Manual",
+    units:"yd",
+    clubs:state.clubs.filter(c=>c.name)
+  };
+  if(state.wedgeMatrix.length){
+    j.wedgeMatrix=state.wedgeMatrix.map(w=>({
+      name:w.name,
+      swings:{ quarter:w.q, half:w.h, threeQuarter:w.tq, full:w.f }
+    }));
+  }
+  return j;
+}
+
+function sync(){
+  preview.value=JSON.stringify(buildJSON(),null,2);
+}
+
+addClub.onclick=()=>{ state.clubs.push({}); render(); };
+addWedge.onclick=()=>{ state.wedgeMatrix.push({}); render(); };
+
+download.onclick=()=>{
+  const b=new Blob([JSON.stringify(buildJSON(),null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);
+  a.download="YardageBook.json";
+  a.click();
+};
+
+function printYardages(){document.body.dataset.print="yardages";window.print();delete document.body.dataset.print;}
+function printWedges(){document.body.dataset.print="wedges";window.print();delete document.body.dataset.print;}
+
+importBtn.onclick=()=>importFile.click();
+importFile.onchange=async e=>{
+  const t=await e.target.files[0].text();
+  const o=JSON.parse(t);
+  state.clubs=o.clubs||[];
+  state.wedgeMatrix=(o.wedgeMatrix||[]).map(w=>({
+    name:w.name,q:w.swings.quarter,h:w.swings.half,tq:w.swings.threeQuarter,f:w.swings.full
+  }));
+  render();
+};
+
+dropZone.ondragover=e=>{e.preventDefault();dropZone.classList.add("drag")};
+dropZone.ondragleave=()=>dropZone.classList.remove("drag");
+dropZone.ondrop=async e=>{
+  e.preventDefault();dropZone.classList.remove("drag");
+  const t=await e.dataTransfer.files[0].text();
+  importFile.onchange({ target:{ files:[{ text:()=>Promise.resolve(t) }] }});
+};
+
+render();
+</script>
+</body>
+</html>
