@@ -4,92 +4,200 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-<title>ForeThought — YardageBook JSON Generator</title>
-<meta name="description" content="YardageBook generator for Lesson Logger Companion." />
+<title>ForeThought — Yardage Book Utility</title>
+<meta name="description" content="Yardage Book utility for ForeThought and Lesson Logger Companion." />
 
 <link rel="stylesheet" href="style.css"/>
 
 <style>
-/* ---- YOUR EXISTING STYLES (unchanged) ---- */
-:root{
-  --bg:#0b0c0f;--card:#12141a;--muted:#8a90a0;--text:#eef0f6;
-  --border:rgba(255,255,255,.10);--shadow:0 10px 30px rgba(0,0,0,.35);
-  --accent:#2d7dff;--danger:#ff4d4d;--ok:#35c759;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+/* ---- LOCAL TOOL STYLES (inherits site look) ---- */
+
+.card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:28px;
 }
-body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text)}
-.wrap{max-width:980px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid var(--border)}
-th{font-size:12px;color:var(--muted)}
-input,textarea{width:100%;padding:8px;border-radius:8px}
-button{padding:10px 12px;border-radius:10px}
-button.primary{background:var(--accent);color:#fff;border:none}
-.btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.mono{font-family:var(--mono)}
-.hint{font-size:12px;color:var(--muted)}
-.drop{border:1px dashed var(--border);padding:14px;border-radius:14px;text-align:center}
-.compat{display:inline-flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
-.compat .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+
+label{
+  display:block;
+  font-weight:500;
+  margin-bottom:6px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:10px;
+}
+
+th, td{
+  padding:8px;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+}
+
+th{
+  text-align:left;
+  color:var(--muted);
+  font-size:12px;
+}
+
+input{
+  width:100%;
+  padding:6px 8px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  font-family:inherit;
+}
+
+button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  cursor:pointer;
+}
+
+button.primary{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+.btnRow{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.drop{
+  border:1px dashed var(--line);
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  margin-bottom:14px;
+}
+
+textarea{
+  width:100%;
+  border-radius:10px;
+  padding:10px;
+  border:1px solid var(--line);
+  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:12px;
+}
+
+.hint{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.compat{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:6px;
+}
 </style>
 </head>
 
 <body>
 
-<header class="wrap">
-  <h1>YardageBook JSON Generator</h1>
-  <div class="compat"><span class="dot"></span>ForeThought export compatible</div>
-</header>
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="brand">ForeThought</a>
+    </div>
+    <div class="nav-right">
+      <a href="features.html">Features</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="lesson-logger.html">Lesson Logger</a>
+      <a href="yardage-book.html" class="active">Yardage Book</a>
+      <a href="availability.html">Availability</a>
+    </div>
+  </div>
+</nav>
 
-<main class="wrap">
+<main class="container">
+
+<small class="muted">ForeThought Utility</small>
+<h1>Yardage Book</h1>
+
+<p class="lede">
+Create and maintain yardage data used by ForeThought and Lesson Logger Companion.
+</p>
+
+<p class="hint">
+Yardage data is captured and refined outside of live play to keep the process
+deliberate, editable, and under your control.
+</p>
+
+<div class="compat">Designed for ForeThought</div>
+
+<hr/>
+
 <div class="card">
 
-<label>Clubs</label>
+<label>Club yardages</label>
+
 <table>
-<thead><tr><th>Club</th><th>Carry</th><th>Total</th><th></th></tr></thead>
+<thead>
+<tr><th>Club</th><th>Carry</th><th>Total</th><th></th></tr>
+</thead>
 <tbody id="clubBody"></tbody>
 </table>
+
 <button id="addClub" class="primary">+ Add club</button>
 
 <hr/>
 
-<label>Wedge Matrix</label>
+<label>Wedge matrix (partial swings)</label>
+
 <table>
-<thead><tr><th>Wedge</th><th>¼</th><th>½</th><th>¾</th><th>Full</th><th></th></tr></thead>
+<thead>
+<tr><th>Wedge</th><th>¼</th><th>½</th><th>¾</th><th>Full</th><th></th></tr>
+</thead>
 <tbody id="wedgeBody"></tbody>
 </table>
+
 <button id="addWedge">+ Add wedge</button>
 
 <div class="btnRow">
-  <button class="primary" id="download">Download JSON</button>
-  <button onclick="exportYardagesA6()">Export Yardages (A6)</button>
-  <button onclick="exportWedgesA6()">Export Wedges (A6)</button>
+  <button class="primary" id="download">Download YardageBook.json</button>
+  <button onclick="printYardages()">Save yardages as PDF</button>
+  <button onclick="printWedges()">Save wedge matrix as PDF</button>
 </div>
 
 <hr/>
 
-<label>Import existing YardageBook.json</label>
-<div class="drop" id="dropZone">
-  Drag & drop JSON here or
-  <button id="importBtn">Choose file</button>
+<label>Import existing yardage data</label>
+
+<div class="drop">
+  Drag & drop a YardageBook.json file here, or
+  <button onclick="importFile.click()">Choose file</button>
   <input id="importFile" type="file" accept="application/json" hidden>
 </div>
 
-<label>Live JSON</label>
-<textarea id="preview" rows="18" class="mono" readonly></textarea>
+<label>Generated data (read-only)</label>
+<textarea id="preview" rows="16" readonly></textarea>
+
+<p class="hint" style="margin-top:12px">
+This utility is part of the ForeThought workflow and is not intended as a standalone product.
+</p>
 
 </div>
+
 </main>
 
 <script>
-let state={ clubs:[], wedgeMatrix:[] };
+let state = { clubs: [], wedgeMatrix: [] };
 
 function render(){
-  clubBody.innerHTML="";
+  clubBody.innerHTML = "";
   state.clubs.forEach((c,i)=>{
-    clubBody.innerHTML+=`
+    clubBody.innerHTML += `
       <tr>
         <td><input value="${c.name||""}" oninput="c.name=this.value;sync()"></td>
         <td><input value="${c.carry||""}" oninput="c.carry=+this.value;sync()"></td>
@@ -98,9 +206,9 @@ function render(){
       </tr>`;
   });
 
-  wedgeBody.innerHTML="";
+  wedgeBody.innerHTML = "";
   state.wedgeMatrix.forEach((w,i)=>{
-    wedgeBody.innerHTML+=`
+    wedgeBody.innerHTML += `
       <tr>
         <td><input value="${w.name||""}" oninput="w.name=this.value;sync()"></td>
         <td><input value="${w.q||""}" oninput="w.q=+this.value;sync()"></td>
@@ -115,85 +223,97 @@ function render(){
 }
 
 function buildJSON(){
-  const j={
+  const j = {
     type:"yardageBook",
     generatedAt:new Date().toISOString(),
-    source:"Manual",
     units:"yd",
-    clubs:state.clubs.filter(c=>c.name)
+    clubs: state.clubs.filter(c=>c.name)
   };
   if(state.wedgeMatrix.length){
-    j.wedgeMatrix=state.wedgeMatrix.map(w=>({
+    j.wedgeMatrix = state.wedgeMatrix.map(w=>({
       name:w.name,
-      swings:{quarter:w.q,half:w.h,threeQuarter:w.tq,full:w.f}
+      swings:{
+        quarter:w.q,
+        half:w.h,
+        threeQuarter:w.tq,
+        full:w.f
+      }
     }));
   }
   return j;
 }
 
 function sync(){
-  preview.value=JSON.stringify(buildJSON(),null,2);
+  preview.value = JSON.stringify(buildJSON(), null, 2);
 }
 
-addClub.onclick=()=>{ state.clubs.push({}); render(); };
-addWedge.onclick=()=>{ state.wedgeMatrix.push({}); render(); };
+addClub.onclick = ()=>{ state.clubs.push({}); render(); };
+addWedge.onclick = ()=>{ state.wedgeMatrix.push({}); render(); };
 
-download.onclick=()=>{
-  const b=new Blob([JSON.stringify(buildJSON(),null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(b);
-  a.download="YardageBook.json";
+download.onclick = ()=>{
+  const blob = new Blob([JSON.stringify(buildJSON(),null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "YardageBook.json";
   a.click();
 };
 
-/* ---- CORRECT A6 EXPORT ---- */
-function openA6(title, tableHTML){
-  const w=window.open("","_blank","width=420,height=600");
+/* ---------- PDF EXPORTS (PRINT → SAVE AS PDF) ---------- */
+
+function openPrint(title, table){
+  const w = window.open("","_blank");
   w.document.write(`
     <style>
       @page{size:A6;margin:8mm}
-      body{font-family:-apple-system;margin:0;color:#000}
-      h1{text-align:center;font-size:14px;margin-bottom:6px}
+      body{font-family:-apple-system,system-ui;margin:0;color:#000}
+      h1{text-align:center;font-size:14px;margin-bottom:8px}
       table{width:100%;border-collapse:collapse}
       th,td{font-size:12px;padding:6px;border-bottom:1px solid #ccc}
     </style>
     <h1>${title}</h1>
-    ${tableHTML}
+    ${table}
     <script>window.onload=()=>window.print();<\/script>
   `);
   w.document.close();
 }
 
-function exportYardagesA6(){
-  openA6(
+function printYardages(){
+  openPrint(
     "Yardages",
-    `<table><tr><th>Club</th><th>Carry</th><th>Total</th></tr>
-     ${state.clubs.map(c=>`<tr><td>${c.name}</td><td>${c.carry}</td><td>${c.total}</td></tr>`).join("")}
+    `<table>
+      <tr><th>Club</th><th>Carry</th><th>Total</th></tr>
+      ${state.clubs.map(c=>`<tr><td>${c.name}</td><td>${c.carry}</td><td>${c.total}</td></tr>`).join("")}
      </table>`
   );
 }
 
-function exportWedgesA6(){
-  openA6(
+function printWedges(){
+  openPrint(
     "Wedge Matrix",
-    `<table><tr><th>Wedge</th><th>¼</th><th>½</th><th>¾</th><th>Full</th></tr>
-     ${state.wedgeMatrix.map(w=>`<tr><td>${w.name}</td><td>${w.q}</td><td>${w.h}</td><td>${w.tq}</td><td>${w.f}</td></tr>`).join("")}
+    `<table>
+      <tr><th>Wedge</th><th>¼</th><th>½</th><th>¾</th><th>Full</th></tr>
+      ${state.wedgeMatrix.map(w=>`<tr><td>${w.name}</td><td>${w.q}</td><td>${w.h}</td><td>${w.tq}</td><td>${w.f}</td></tr>`).join("")}
      </table>`
   );
 }
 
-/* ---- IMPORT ---- */
-importBtn.onclick=()=>importFile.click();
-importFile.onchange=async e=>{
-  const o=JSON.parse(await e.target.files[0].text());
-  state.clubs=o.clubs||[];
-  state.wedgeMatrix=(o.wedgeMatrix||[]).map(w=>({
-    name:w.name,q:w.swings.quarter,h:w.swings.half,tq:w.swings.threeQuarter,f:w.swings.full
+/* ---------- IMPORT ---------- */
+
+importFile.onchange = async e=>{
+  const o = JSON.parse(await e.target.files[0].text());
+  state.clubs = o.clubs || [];
+  state.wedgeMatrix = (o.wedgeMatrix || []).map(w=>({
+    name:w.name,
+    q:w.swings.quarter,
+    h:w.swings.half,
+    tq:w.swings.threeQuarter,
+    f:w.swings.full
   }));
   render();
 };
 
 render();
 </script>
+
 </body>
 </html>
