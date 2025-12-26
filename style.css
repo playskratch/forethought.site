@@ -1,3 +1,46 @@
+/* -------------------------------------------------
+   Top Navigation (Apple Docs style)
+------------------------------------------------- */
+
+.topnav{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-inner{
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-left .brand{
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.nav-right a{
+  margin-left: 22px;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.nav-right a:hover{
+  color: var(--text);
+}
+
+
+
 :root{
   --bg: #ffffff;
   --text: #111111;
