@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yardage Book – Cheadle GC</title>
+
+<link rel="icon" href="skratch.png" type="image/png">
+<link rel="apple-touch-icon" href="skratch.png" sizes="180x180">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Yardage Book">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+:root{
+  --accent:#2d6a4f;
+  --bg:#f5f6f7;
+  --card:rgba(255,255,255,0.85);
+  --border:rgba(0,0,0,0.06);
+  --text:#1d1d1f;
+  --muted:#6e6e73;
+}
+
+*{ box-sizing:border-box }
+
+body{
+  margin:0;
+  padding:1rem;
+  padding-bottom:8rem; /* space for footer */
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+h1{
+  text-align:center;
+  font-size:1.6rem;
+  font-weight:700;
+  margin:.5rem 0 .25rem;
+}
+
+.card{
+  background:var(--card);
+  backdrop-filter:blur(14px);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:1rem;
+  margin:.75rem auto;
+  max-width:420px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.08);
+}
+
+#yardageStatusTop{
+  text-align:center;
+  font-weight:700;
+  color:var(--muted);
+  margin:.25rem auto .25rem;
+}
+
+#compassStatus{
+  text-align:center;
+  font-size:.95rem;
+  color:var(--muted);
+  margin:0 auto .6rem;
+}
+
+#map{
+  height:320px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  margin:1rem auto;
+  max-width:420px;
+}
+
+select,button{
+  width:100%;
+  padding:.75rem 1rem;
+  border-radius:14px;
+  font-size:1rem;
+  font-weight:600;
+  border:1px solid var(--border);
+  background:white;
+}
+
+button{
+  background:var(--accent);
+  color:white;
+  border:none;
+  box-shadow:0 6px 16px rgba(45,106,79,.35);
+  margin-top:.5rem;
+}
+
+button.secondary{
+  background:white;
+  color:var(--accent);
+  box-shadow:none;
+}
+
+button:active{ transform:scale(.97) }
+
+#distanceDisplay{
+  text-align:center;
+  font-size:1.3rem;
+  font-weight:700;
+  margin-top:.5rem;
+}
+
+#clubSuggestion{
+  text-align:center;
+  margin-top:.4rem;
+  font-weight:700;
+  color:var(--accent);
+}
+
+#headingLabel{
+  text-align:center;
+  margin-top:.35rem;
+  font-size:.95rem;
+  color:var(--muted);
+  display:none;
+}
+
+#holeInfo{
+  text-align:center;
+  font-size:.95rem;
+  color:var(--muted);
+}
+
+/* Weather */
+#weatherBox{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.75rem;
+}
+
+#weatherBox img{
+  width:54px;
+  height:54px;
+}
+
+/* Footer */
+.footerBar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  padding:.75rem 1rem;
+  z-index:999;
+}
+
+.footerInner{ max-width:420px; margin:auto; }
+
+.footerRow{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:.5rem;
+}
+
+.footerActions{
+  display:flex;
+  gap:.5rem;
+}
+
+.footerActions button{
+  width:auto;
+  padding:.55rem .9rem;
+  border-radius:999px;
+  font-size:.9rem;
+  margin-top:0;
+  transition:background-color .15s ease, transform .05s ease;
+}
+
+.footerActions button:active{ transform:scale(.92); }
+
+.footerHint{
+  font-size:.75rem;
+  color:var(--muted);
+  margin-top:.4rem;
+  text-align:center;
+  line-height:1.25;
+}
+
+.footerHint a{
+  color:var(--accent);
+  font-weight:700;
+  text-decoration:none;
+}
+
+.footerText{
+  font-size:.75rem;
+  color:var(--muted);
+  text-align:center;
+  margin-top:.5rem;
+}
+
+#adminBadge{
+  display:none;
+  font-size:.75rem;
+  font-weight:700;
+  color:var(--accent);
+  white-space:nowrap;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Yardage Book</h1>
+<div id="yardageStatusTop">Club Yardages: Not loaded</div>
+<div id="compassStatus">Compass: Off</div>
+
+<div id="weatherBox" class="card">Loading weather…</div>
+
+<div id="map"></div>
+
+<div class="card">
+  <select id="holeSelect" onchange="showHoleLayout()">
+    <option value="">Select Hole</option>
+    <option value="1">Hole 1</option>
+    <option value="2">Hole 2</option>
+    <option value="3">Hole 3</option>
+    <option value="4">Hole 4</option>
+    <option value="5">Hole 5</option>
+    <option value="6">Hole 6</option>
+    <option value="7">Hole 7</option>
+    <option value="8">Hole 8</option>
+    <option value="9">Hole 9</option>
+    <option value="Practice">Practice Area</option>
+  </select>
+
+  <div id="holeInfo">Select a hole to view details</div>
+  <div id="distanceDisplay">Distance: --</div>
+  <div id="clubSuggestion">Suggested Club: --</div>
+  <div id="headingLabel">You’re pointing: --</div>
+
+  <button class="secondary" onclick="openYardageSheet()">📊 View Yardages</button>
+</div>
+
+<div id="saveButtons" class="card" style="display:none">
+  <button>📍 Save Green Center</button>
+  <button>⚪ Save White Tee</button>
+  <button>🟡 Save Yellow Tee</button>
+  <button class="secondary">📤 Export Yardage Data</button>
+</div>
+
+<input type="file" id="yardageFile" accept=".json" style="display:none">
+
+<!-- Footer -->
+<div class="footerBar">
+  <div class="footerInner">
+
+    <div class="footerRow">
+      <div class="footerActions">
+        <span id="adminBadge">Admin</span>
+
+        <button class="secondary"
+                title="Add YardageBook.json"
+                onclick="document.getElementById('yardageFile').click()">➕</button>
+
+        <button class="secondary"
+                title="Clear stored club yardages"
+                onclick="clearYardageBook()">🗑️</button>
+
+        <button class="secondary"
+                id="compassToggleBtn"
+                title="Enable compass heading"
+                onclick="toggleCompass()">🧭</button>
+
+        <button class="secondary"
+                title="Admin tools"
+                onclick="toggleAdminMode()">🔒</button>
+      </div>
+    </div>
+
+    <div class="footerHint">
+      ForeThought export • Create one at
+      <a href="http://forethought.site/yardagebook.html" target="_blank" rel="noopener">
+        forethought.site/yardagebook.html
+      </a>
+    </div>
+
+    <div class="footerText">Powered by ForeThought.site • An Apple Geek Product</div>
+
+  </div>
+</div>
+
+<!-- Yardage Sheet -->
+<div id="yardageSheet" style="
+  position:fixed; inset:0; display:none;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(6px);
+  align-items:flex-end; justify-content:center;
+  z-index:2000;">
+  <div style="
+    background:rgba(255,255,255,.96);
+    border-radius:20px 20px 0 0;
+    width:100%; max-width:420px;
+    padding:1rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+      <strong>Yardages</strong>
+      <button class="secondary" onclick="closeYardageSheet()">Done</button>
+    </div>
+    <div id="yardageList" style="max-height:55vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const adminPasscode = "2024";
+
+let yardageBook = null;
+
+// Compass state
+let compassEnabled = false;
+let compassListener = null;
+let lastHeading = null;
+
+/* ---------- Yardage status ---------- */
+function setStatus(text, ok){
+  const el = document.getElementById("yardageStatusTop");
+  el.textContent = text;
+  el.style.color = ok ? "var(--accent)" : "var(--muted)";
+}
+
+/* ---------- YardageBook storage ---------- */
+function validateBook(j){
+  return j?.type==="yardageBook" && j?.source==="ForeThought" &&
+    Array.isArray(j.clubs) &&
+    j.clubs.every(c=>typeof c.name==="string" && typeof c.carry==="number");
+}
+
+(function loadBook(){
+  try{
+    const raw = localStorage.getItem("yardageBookJSON");
+    if(!raw) return;
+    const j = JSON.parse(raw);
+    if(!validateBook(j)) throw 0;
+    yardageBook = j;
+    setStatus("Club Yardages: Loaded ✓", true);
+  }catch{
+    localStorage.removeItem("yardageBookJSON");
+  }
+})();
+
+document.getElementById("yardageFile").addEventListener("change", (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const j = JSON.parse(r.result);
+      if(!validateBook(j)) return alert("Invalid ForeThought YardageBook");
+      yardageBook = j;
+      localStorage.setItem("yardageBookJSON", JSON.stringify(j));
+      setStatus("Club Yardages: Loaded ✓", true);
+      showHoleLayout();
+    }catch{
+      alert("Couldn’t read that JSON file.");
+    }
+  };
+  r.readAsText(f);
+});
+
+function clearYardageBook(){
+  if(!confirm("Clear stored club yardages?")) return;
+  localStorage.removeItem("yardageBookJSON");
+  yardageBook = null;
+  setStatus("Club Yardages: Not loaded", false);
+  document.getElementById("clubSuggestion").textContent = "Suggested Club: --";
+}
+
+/* ---------- Club suggestion ---------- */
+function suggestClub(y){
+  if(!yardageBook) return null;
+
+  let best = null;
+  let bestDiff = Infinity;
+
+  for(const c of yardageBook.clubs){
+    const diff = Math.abs(c.carry - y);
+    if(diff <= 10 && diff < bestDiff){
+      best = c;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
+
+/* ---------- Yardage sheet ---------- */
+function openYardageSheet(){
+  if(!yardageBook) return alert("No YardageBook loaded");
+
+  const list = document.getElementById("yardageList");
+  list.innerHTML = "";
+
+  const m = document.getElementById("distanceDisplay").textContent.match(/(\d+)/);
+  const y = m ? parseInt(m[1], 10) : null;
+  const s = y ? suggestClub(y) : null;
+
+  for(const c of yardageBook.clubs){
+    const hl = s && s.name === c.name;
+    list.innerHTML += `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:.6rem 0;border-bottom:1px solid #eee;
+                  font-weight:${hl ? "800" : "600"};
+                  color:${hl ? "var(--accent)" : "inherit"}">
+        <div>${c.name}</div>
+        <div style="font-size:.9rem;color:${hl ? "var(--accent)" : "var(--muted)"}">
+          ${c.carry}y${typeof c.total === "number" ? ` • ${c.total}y` : ""}
+        </div>
+      </div>`;
+  }
+
+  document.getElementById("yardageSheet").style.display = "flex";
+}
+
+function closeYardageSheet(){
+  document.getElementById("yardageSheet").style.display = "none";
+}
+
+/* ---------- Map + GPS ---------- */
+const greens={
+  "1":[53.385712,-2.205569],
+  "2":[53.385069,-2.206453],
+  "3":[53.383919,-2.204562],
+  "4":[53.387625,-2.202824],
+  "5":[53.387667,-2.203872],
+  "6":[53.384237,-2.203861],
+  "7":[53.385387,-2.205308],
+  "8":[53.387473,-2.20485],
+  "9":[53.387958,-2.206264],
+  "Practice":[53.38702520975405,-2.2054895310942686]
+};
+
+let map = L.map("map").setView([53.387,-2.205], 17);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+
+let userMarker = null;
+let greenMarker = null;
+
+navigator.geolocation.watchPosition(
+  (pos) => {
+    const { latitude, longitude } = pos.coords;
+    if(!userMarker){
+      userMarker = L.marker([latitude, longitude], { title: "Your Location" }).addTo(map);
+    }else{
+      userMarker.setLatLng([latitude, longitude]);
+    }
+    showHoleLayout();
+  },
+  (err) => console.warn("GPS Error:", err.message),
+  { enableHighAccuracy:true }
+);
+
+function showHoleLayout(){
+  const h = document.getElementById("holeSelect").value;
+
+  if(!h || !greens[h]){
+    document.getElementById("distanceDisplay").textContent = "Distance: --";
+    document.getElementById("clubSuggestion").textContent = "Suggested Club: --";
+    return;
+  }
+
+  const g = { lat: greens[h][0], lng: greens[h][1] };
+
+  document.getElementById("holeInfo").textContent = h === "Practice"
+    ? "Practice Area"
+    : `Hole ${h}`;
+
+  if(greenMarker){
+    greenMarker.setLatLng([g.lat, g.lng]);
+  }else{
+    greenMarker = L.marker([g.lat, g.lng], { title: "Green" }).addTo(map);
+  }
+
+  if(userMarker){
+    const d = getDistance(userMarker.getLatLng(), g);
+    const y = Math.round(d * 1.09361);
+    document.getElementById("distanceDisplay").textContent = `Distance: ${y} yards`;
+
+    const c = suggestClub(y);
+    document.getElementById("clubSuggestion").textContent = c
+      ? `Suggested Club: ${c.name} • ${c.carry}y carry`
+      : "Suggested Club: --";
+  }
+}
+
+function getDistance(a,b){
+  const R=6371e3;
+  const toRad=x=>x*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat);
+  const dLon=toRad(b.lng-a.lng);
+  const aa=Math.sin(dLat/2)**2 +
+           Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*
+           Math.sin(dLon/2)**2;
+  return R*(2*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa)));
+}
+
+/* ---------- Compass mode + heading label ---------- */
+function updateCompassStatus(){
+  const status = document.getElementById("compassStatus");
+  const btn = document.getElementById("compassToggleBtn");
+
+  if(compassEnabled){
+    status.innerHTML = "Compass: <span style='color:var(--accent);font-weight:700'>Enabled ✓</span>";
+    btn.style.background = "var(--accent)";
+    btn.style.color = "white";
+  }else{
+    status.textContent = "Compass: Off";
+    btn.style.background = "";
+    btn.style.color = "";
+  }
+}
+
+function enableCompass(){
+  function start(){
+    compassListener = (event) => {
+      let heading = event.alpha;
+
+      if(typeof event.webkitCompassHeading !== "undefined" && event.webkitCompassHeading !== null){
+        heading = event.webkitCompassHeading;
+      }
+
+      if(heading == null) return;
+
+      heading = (heading % 360 + 360) % 360;
+      lastHeading = heading;
+
+      const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+      const dir = dirs[Math.round(heading / 45) % 8];
+
+      const label = document.getElementById("headingLabel");
+      label.style.display = "block";
+      label.textContent = `You’re pointing: ${dir} (${Math.round(heading)}°)`;
+    };
+
+    window.addEventListener("deviceorientation", compassListener, true);
+
+    compassEnabled = true;
+    localStorage.setItem("compassEnabled","true");
+    updateCompassStatus();
+
+    const label = document.getElementById("headingLabel");
+    label.style.display = "block";
+    label.textContent = "You’re pointing: --";
+  }
+
+  if(typeof DeviceOrientationEvent !== "undefined" &&
+     typeof DeviceOrientationEvent.requestPermission === "function"){
+    DeviceOrientationEvent.requestPermission().then(response=>{
+      if(response === "granted") start();
+      else alert("Compass permission denied.");
+    }).catch(console.error);
+  } else {
+    start();
+  }
+}
+
+function disableCompass(){
+  if(compassListener){
+    window.removeEventListener("deviceorientation", compassListener, true);
+    compassListener = null;
+  }
+  compassEnabled = false;
+  localStorage.setItem("compassEnabled","false");
+  updateCompassStatus();
+
+  const label = document.getElementById("headingLabel");
+  label.style.display = "none";
+  label.textContent = "You’re pointing: --";
+}
+
+function toggleCompass(){
+  compassEnabled ? disableCompass() : enableCompass();
+}
+
+(function restoreCompassState(){
+  const saved = localStorage.getItem("compassEnabled");
+  if(saved === "true"){
+    enableCompass();
+  }else{
+    updateCompassStatus();
+  }
+})();
+
+/* ---------- Admin ---------- */
+function toggleAdminMode(){
+  if(prompt("Admin Passcode")==adminPasscode){
+    document.getElementById("adminBadge").style.display = "inline";
+    // (Add your admin UI toggles here if needed)
+  }
+}
+
+/* ---------- Weather (icon + wind) ---------- */
+async function loadWeather(){
+  const res = await fetch("https://api.openweathermap.org/data/2.5/weather?lat=53.387&lon=-2.205&units=metric&appid=e583bd0c194bbfeb3deb92f6bfdad11a");
+  const d = await res.json();
+
+  const temp = Math.round(d.main.temp);
+  const wind = Math.round(d.wind.speed * 2.237);
+  const dir = ["N","NE","E","SE","S","SW","W","NW"][Math.round(d.wind.deg/45)%8];
+
+  weatherBox.innerHTML = `
+    <img src="https://openweathermap.org/img/wn/${d.weather[0].icon}@2x.png" alt="${d.weather[0].description}">
+    <div>
+      <strong>Cheadle GC</strong><br>
+      ${temp}°C • ${d.weather[0].description}<br>
+      Wind: ${wind} mph ${dir}
+    </div>`;
+}
+loadWeather();
+</script>
+
+</body>
+</html>
