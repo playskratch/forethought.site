@@ -131,6 +131,7 @@ button.secondary{
   backdrop-filter:blur(14px);
   border-top:1px solid var(--border);
   padding:.75rem;
+  z-index:999;
 }
 
 .footerInner{max-width:420px;margin:auto;text-align:center}
@@ -153,7 +154,7 @@ button.secondary{
   margin-top:.5rem;
 }
 
-/* Arrow markers */
+/* Markers: no box/background */
 .arrowBubble{
   background: transparent !important;
   border: none !important;
@@ -171,6 +172,18 @@ button.secondary{
 .leaflet-div-icon{
   background: transparent !important;
   border: none !important;
+}
+
+/* Make the layer control feel a bit more “iOS” */
+.leaflet-control-layers{
+  border:1px solid rgba(0,0,0,0.10) !important;
+  border-radius:14px !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.14) !important;
+  overflow:hidden;
+}
+.leaflet-control-layers-expanded{
+  background:rgba(255,255,255,0.9) !important;
+  backdrop-filter:blur(14px);
 }
 </style>
 </head>
@@ -212,38 +225,49 @@ button.secondary{
 <div class="footerBar">
   <div class="footerInner">
     <div class="footerActions">
-      <button class="secondary" onclick="yardageFile.click()">➕</button>
-      <button class="secondary" onclick="clearYardageBook()">🗑️</button>
-      <button class="secondary" onclick="toggleCompass()">🧭</button>
+      <button class="secondary" title="Add YardageBook.json" onclick="yardageFile.click()">➕</button>
+      <button class="secondary" title="Clear stored club yardages" onclick="clearYardageBook()">🗑️</button>
+      <button class="secondary" id="compassToggleBtn" title="Toggle compass" onclick="toggleCompass()">🧭</button>
     </div>
     <div class="footerText">Powered by ForeThought.site • An Apple Geek Product</div>
   </div>
 </div>
 
 <!-- Yardage Sheet -->
-<div id="yardageSheet" style="position:fixed;inset:0;display:none;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
+<div id="yardageSheet" style="position:fixed;inset:0;display:none;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;z-index:2000;">
   <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:420px;padding:1rem">
-    <div style="display:flex;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;align-items:center">
       <strong>Yardages</strong>
       <button class="secondary" onclick="closeYardageSheet()">Done</button>
     </div>
-    <div id="yardageList"></div>
+    <div id="yardageList" style="margin-top:.5rem;max-height:55vh;overflow:auto"></div>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-/* ---------- Map Layers ---------- */
-let map=L.map("map").setView([53.387,-2.205],17);
+/* =========================================================
+   LOCKED BASELINE — YardageBook + Compass persistence + Map
+   ========================================================= */
 
-const street=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19});
-const satellite=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19});
+/* ---------- Map Layers ---------- */
+let map = L.map("map").setView([53.387, -2.205], 17);
+
+const street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+});
+
+const satellite = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  { maxZoom: 19, attribution: "Tiles &copy; Esri" }
+);
 
 street.addTo(map);
-L.control.layers({"Map":street,"Satellite":satellite}).addTo(map);
+L.control.layers({"Map": street, "Satellite": satellite}, null, { position: "topright" }).addTo(map);
 
 /* ---------- Hole Data ---------- */
-const yardageData={
+const yardageData = {
  "1":{whiteTee:{lat:53.388113,lng:-2.2067},green:{lat:53.385712,lng:-2.205569}},
  "2":{whiteTee:{lat:53.386272,lng:-2.205266},green:{lat:53.385069,lng:-2.206453}},
  "3":{whiteTee:{lat:53.386122,lng:-2.206867},green:{lat:53.383919,lng:-2.204562}},
@@ -256,97 +280,329 @@ const yardageData={
 };
 
 /* ---------- Icons ---------- */
-const teeIcon=L.divIcon({html:`<div class="arrowBubble">📍</div>`,iconSize:[24,24],iconAnchor:[12,12]});
-const greenIcon=L.divIcon({html:`<div class="arrowBubble">⛳️</div>`,iconSize:[24,24],iconAnchor:[12,12]});
+const teeIcon = L.divIcon({
+  className: "",
+  html: `<div class="arrowBubble">📍</div>`,
+  iconSize: [24,24],
+  iconAnchor: [12,12]
+});
+const greenIcon = L.divIcon({
+  className: "",
+  html: `<div class="arrowBubble">⛳️</div>`,
+  iconSize: [24,24],
+  iconAnchor: [12,12]
+});
 
-let teeMarker,greenMarker,holeLine,userMarker;
+let teeMarker=null, greenMarker=null, holeLine=null, userMarker=null;
 
 /* ---------- GPS ---------- */
-navigator.geolocation.watchPosition(p=>{
-  const {latitude,longitude}=p.coords;
-  userMarker?userMarker.setLatLng([latitude,longitude]):
-    userMarker=L.marker([latitude,longitude]).addTo(map);
-  showHoleLayout();
-});
+navigator.geolocation.watchPosition(
+  (pos)=>{
+    const {latitude, longitude} = pos.coords;
+    if(!userMarker){
+      userMarker = L.marker([latitude, longitude], { title: "Your Location" }).addTo(map);
+    } else {
+      userMarker.setLatLng([latitude, longitude]);
+    }
+    showHoleLayout();
+  },
+  (err)=>console.warn("GPS Error:", err.message),
+  { enableHighAccuracy:true }
+);
 
 /* ---------- Distance ---------- */
 function getDistance(a,b){
-  const R=6371e3,toRad=x=>x*Math.PI/180;
-  const dLat=toRad(b.lat-a.lat),dLon=toRad(b.lng-a.lng);
-  const aa=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
-  return R*(2*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa)));
+  const R=6371e3, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lng-a.lng);
+  const aa=Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
+  return R*(2*Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa)));
 }
 
-/* ---------- Draw Hole ---------- */
+/* =========================================================
+   YARDAGEBOOK (persist + restore + suggest + popup)
+   ========================================================= */
+let yardageBook = null;
+
+function setYardageStatus(ok){
+  const el = document.getElementById("yardageStatusTop");
+  el.textContent = ok ? "Club Yardages: Loaded ✓" : "Club Yardages: Not loaded";
+  el.style.color = ok ? "var(--accent)" : "var(--muted)";
+}
+
+function validateBook(j){
+  return j?.type === "yardageBook" &&
+         j?.source === "ForeThought" &&
+         Array.isArray(j.clubs) &&
+         j.clubs.every(c => typeof c.name === "string" && typeof c.carry === "number");
+}
+
+(function restoreYardageBook(){
+  try{
+    const raw = localStorage.getItem("yardageBookJSON");
+    if(!raw) return setYardageStatus(false);
+    const j = JSON.parse(raw);
+    if(!validateBook(j)) throw 0;
+    yardageBook = j;
+    setYardageStatus(true);
+  }catch{
+    localStorage.removeItem("yardageBookJSON");
+    setYardageStatus(false);
+  }
+})();
+
+document.getElementById("yardageFile").addEventListener("change", (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const j = JSON.parse(r.result);
+      if(!validateBook(j)) return alert("Invalid ForeThought YardageBook.json");
+      yardageBook = j;
+      localStorage.setItem("yardageBookJSON", JSON.stringify(j));
+      setYardageStatus(true);
+      showHoleLayout();
+    }catch{
+      alert("Couldn’t read that JSON file.");
+    }
+  };
+  r.readAsText(f);
+});
+
+function clearYardageBook(){
+  if(!confirm("Clear stored club yardages?")) return;
+  localStorage.removeItem("yardageBookJSON");
+  yardageBook = null;
+  setYardageStatus(false);
+  document.getElementById("clubSuggestion").textContent = "Suggested Club: --";
+}
+
+function suggestClub(yards){
+  if(!yardageBook) return null;
+
+  let best=null, bestDiff=Infinity;
+  for(const c of yardageBook.clubs){
+    const diff = Math.abs(c.carry - yards);
+    if(diff <= 10 && diff < bestDiff){
+      best = c;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
+
+function openYardageSheet(){
+  if(!yardageBook) return alert("No YardageBook loaded");
+
+  const list = document.getElementById("yardageList");
+  list.innerHTML = "";
+
+  const m = document.getElementById("distanceDisplay").textContent.match(/(\d+)/);
+  const y = m ? parseInt(m[1], 10) : null;
+  const s = y ? suggestClub(y) : null;
+
+  for(const c of yardageBook.clubs){
+    const hl = s && s.name === c.name;
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.justifyContent = "space-between";
+    row.style.padding = ".55rem 0";
+    row.style.borderBottom = "1px solid #eee";
+    row.style.fontWeight = hl ? "800" : "600";
+    row.style.color = hl ? "var(--accent)" : "inherit";
+    row.innerHTML = `<div>${c.name}</div><div style="color:${hl?"var(--accent)":"var(--muted)"}">${c.carry}y${typeof c.total==="number" ? ` • ${c.total}y` : ""}</div>`;
+    list.appendChild(row);
+  }
+
+  document.getElementById("yardageSheet").style.display = "flex";
+}
+function closeYardageSheet(){
+  document.getElementById("yardageSheet").style.display = "none";
+}
+
+/* =========================================================
+   DRAW HOLE + SUGGEST CLUB
+   ========================================================= */
 function showHoleLayout(){
-  const h=holeSelect.value;
-  if(!h||!yardageData[h]||!userMarker)return;
+  const h = document.getElementById("holeSelect").value;
+  if(!h || !yardageData[h] || !userMarker) return;
 
-  if(teeMarker)map.removeLayer(teeMarker);
-  if(greenMarker)map.removeLayer(greenMarker);
-  if(holeLine)map.removeLayer(holeLine);
+  // Clear old overlays
+  if(teeMarker) map.removeLayer(teeMarker);
+  if(greenMarker) map.removeLayer(greenMarker);
+  if(holeLine) map.removeLayer(holeLine);
 
-  const {whiteTee,green}=yardageData[h];
-  teeMarker=L.marker([whiteTee.lat,whiteTee.lng],{icon:teeIcon}).addTo(map);
-  greenMarker=L.marker([green.lat,green.lng],{icon:greenIcon}).addTo(map);
+  const { whiteTee, green } = yardageData[h];
 
-  holeLine=L.polyline([[whiteTee.lat,whiteTee.lng],[green.lat,green.lng]],{
-    color:"#007AFF",weight:4
+  teeMarker = L.marker([whiteTee.lat, whiteTee.lng], { icon: teeIcon, title: "Tee" }).addTo(map);
+  greenMarker = L.marker([green.lat, green.lng], { icon: greenIcon, title: "Green" }).addTo(map);
+
+  holeLine = L.polyline([[whiteTee.lat, whiteTee.lng],[green.lat, green.lng]], {
+    color:"#007AFF",
+    weight:4,
+    opacity:0.9
   }).addTo(map);
 
-  map.fitBounds(holeLine.getBounds(),{padding:[30,30]});
+  map.fitBounds(holeLine.getBounds(), { padding:[30,30] });
 
-  const d=getDistance(userMarker.getLatLng(),green);
-  const yards=Math.round(d*1.09361);
-  distanceDisplay.textContent=`Distance: ${yards} yards`;
+  // Distance to green from user position
+  const dist = getDistance(userMarker.getLatLng(), green);
+  const yards = Math.round(dist * 1.09361);
+  document.getElementById("distanceDisplay").textContent = `Distance: ${yards} yards`;
+
+  // Suggest club (if YardageBook loaded)
+  const c = suggestClub(yards);
+  document.getElementById("clubSuggestion").textContent = c
+    ? `Suggested Club: ${c.name} • ${c.carry}y carry`
+    : "Suggested Club: --";
 }
 
-/* ---------- Compass ---------- */
-let compassEnabled=false,compassListener=null;
+/* =========================================================
+   COMPASS (persist + restore + label)
+   ========================================================= */
+let compassEnabled = false;
+let compassListener = null;
+
+function updateCompassStatus(){
+  const status = document.getElementById("compassStatus");
+  const btn = document.getElementById("compassToggleBtn");
+
+  if(compassEnabled){
+    status.innerHTML = "Compass: <span style='color:var(--accent);font-weight:700'>Enabled ✓</span>";
+    btn.style.background = "var(--accent)";
+    btn.style.color = "white";
+  } else {
+    status.textContent = "Compass: Off";
+    btn.style.background = "";
+    btn.style.color = "";
+  }
+}
 
 function toggleCompass(){
-  compassEnabled?disableCompass():enableCompass();
+  compassEnabled ? disableCompass() : enableCompass();
 }
 
 function enableCompass(){
   function start(){
-    compassListener=e=>{
-      let h=e.webkitCompassHeading??e.alpha;
-      if(h==null)return;
-      h=(h+360)%360;
-      const dirs=["N","NE","E","SE","S","SW","W","NW"];
-      const d=dirs[Math.round(h/45)%8];
-      headingLabel.style.display="block";
-      headingLabel.textContent=`You’re pointing: ${d} (${Math.round(h)}°)`;
+    compassListener = (event)=>{
+      let heading = event.alpha;
+
+      if(typeof event.webkitCompassHeading !== "undefined" && event.webkitCompassHeading !== null){
+        heading = event.webkitCompassHeading;
+      }
+      if(heading == null) return;
+
+      heading = (heading % 360 + 360) % 360;
+      const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+      const dir = dirs[Math.round(heading/45) % 8];
+
+      const label = document.getElementById("headingLabel");
+      label.style.display = "block";
+      label.textContent = `You’re pointing: ${dir} (${Math.round(heading)}°)`;
     };
-    window.addEventListener("deviceorientation",compassListener,true);
-    compassEnabled=true;
-    compassStatus.innerHTML="Compass: <span style='color:var(--accent)'>Enabled ✓</span>";
+
+    window.addEventListener("deviceorientation", compassListener, true);
+
+    compassEnabled = true;
+    localStorage.setItem("compassEnabled", "true");
+    updateCompassStatus();
+
+    const label = document.getElementById("headingLabel");
+    label.style.display = "block";
+    label.textContent = "You’re pointing: --";
   }
 
-  if(DeviceOrientationEvent?.requestPermission){
-    DeviceOrientationEvent.requestPermission().then(r=>r==="granted"?start():alert("Compass denied"));
-  }else start();
+  if(typeof DeviceOrientationEvent !== "undefined" &&
+     typeof DeviceOrientationEvent.requestPermission === "function"){
+
+    DeviceOrientationEvent.requestPermission().then(r=>{
+      if(r === "granted") start();
+      else {
+        compassEnabled = false;
+        localStorage.setItem("compassEnabled","false");
+        updateCompassStatus();
+        alert(
+          "Compass access is disabled.\n\n" +
+          "To enable it:\n" +
+          "• Use HTTPS\n" +
+          "• Settings → Safari → Motion & Orientation Access → Allow\n" +
+          "• Reload the page"
+        );
+      }
+    }).catch(console.error);
+
+  } else {
+    start();
+  }
 }
 
 function disableCompass(){
-  if(compassListener)window.removeEventListener("deviceorientation",compassListener,true);
-  compassEnabled=false;
-  headingLabel.style.display="none";
-  compassStatus.textContent="Compass: Off";
+  if(compassListener){
+    window.removeEventListener("deviceorientation", compassListener, true);
+    compassListener = null;
+  }
+  compassEnabled = false;
+  localStorage.setItem("compassEnabled", "false");
+  updateCompassStatus();
+
+  const label = document.getElementById("headingLabel");
+  label.style.display = "none";
+  label.textContent = "You’re pointing: --";
 }
 
-/* ---------- Weather ---------- */
-fetch("https://api.openweathermap.org/data/2.5/weather?lat=53.387&lon=-2.205&units=metric&appid=e583bd0c194bbfeb3deb92f6bfdad11a")
-.then(r=>r.json())
-.then(d=>{
-  const temp=Math.round(d.main.temp);
-  const wind=Math.round(d.wind.speed*2.237);
-  const dir=["N","NE","E","SE","S","SW","W","NW"][Math.round(d.wind.deg/45)%8];
-  weatherBox.innerHTML=`
-    <img src="https://openweathermap.org/img/wn/${d.weather[0].icon}@2x.png">
-    <div><strong>Cheadle GC</strong><br>${temp}°C • ${d.weather[0].description}<br>Wind: ${wind} mph ${dir}</div>`;
-});
+(function restoreCompassState(){
+  const saved = localStorage.getItem("compassEnabled");
+  if(saved === "true") enableCompass();
+  else updateCompassStatus();
+})();
+
+/* =========================================================
+   WEATHER (robust + icon + wind + fallback)
+   ========================================================= */
+async function loadWeather(){
+  const box = document.getElementById("weatherBox");
+  try{
+    const url = "https://api.openweathermap.org/data/2.5/weather?lat=53.387&lon=-2.205&units=metric&appid=e583bd0c194bbfeb3deb92f6bfdad11a";
+    const res = await fetch(url, { cache: "no-store" });
+
+    if(!res.ok){
+      throw new Error("Weather HTTP " + res.status);
+    }
+
+    const d = await res.json();
+    if(!d?.main?.temp || !d?.weather?.[0]) throw new Error("Weather payload missing fields");
+
+    const temp = Math.round(d.main.temp);
+    const windMph = d.wind?.speed != null ? Math.round(d.wind.speed * 2.237) : null;
+    const windDirDeg = d.wind?.deg;
+    const directions = ["N","NE","E","SE","S","SW","W","NW"];
+    const windDir = (windDirDeg != null) ? directions[Math.round(windDirDeg / 45) % 8] : null;
+
+    const icon = d.weather[0].icon;
+    const desc = d.weather[0].description;
+
+    box.innerHTML = `
+      <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
+      <div>
+        <strong>Cheadle GC</strong><br>
+        ${temp}°C • ${desc}<br>
+        ${windMph != null && windDir != null ? `Wind: ${windMph} mph ${windDir}` : `Wind: --`}
+      </div>
+    `;
+  }catch(err){
+    console.warn("Weather error:", err);
+    box.innerHTML = `
+      <div style="text-align:center;color:var(--muted);font-weight:700;">
+        Weather unavailable
+        <div style="font-weight:600;font-size:.85rem;margin-top:.25rem;">
+          Check connection / API limit
+        </div>
+      </div>
+    `;
+  }
+}
+loadWeather();
 </script>
 
 </body>
