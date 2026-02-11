@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForeThought – Green Capture Admin</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+body{
+  margin:0;
+  padding:1rem;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text";
+  background:#f5f6f7;
+}
+
+h1{
+  text-align:center;
+  font-weight:800;
+}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:1rem;
+  margin:.75rem auto;
+  max-width:420px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+button{
+  width:100%;
+  padding:.75rem;
+  border-radius:12px;
+  font-weight:800;
+  border:none;
+  margin-top:.5rem;
+  background:#007AFF;
+  color:white;
+}
+
+button.secondary{
+  background:#eee;
+  color:#111;
+}
+
+#map{
+  height:320px;
+  border-radius:16px;
+  margin:1rem auto;
+  max-width:420px;
+}
+
+#status{
+  text-align:center;
+  font-weight:800;
+  margin-top:.5rem;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Green Capture</h1>
+
+<div class="card">
+  <select id="holeSelect" style="width:100%;padding:.6rem;border-radius:10px;">
+    <option value="">Select Hole</option>
+    <option value="1">Hole 1</option>
+    <option value="2">Hole 2</option>
+    <option value="3">Hole 3</option>
+    <option value="4">Hole 4</option>
+    <option value="5">Hole 5</option>
+    <option value="6">Hole 6</option>
+    <option value="7">Hole 7</option>
+    <option value="8">Hole 8</option>
+    <option value="9">Hole 9</option>
+  </select>
+
+  <button onclick="setMode('centre')">Capture Centre</button>
+  <button onclick="setMode('front')">Capture Front</button>
+  <button onclick="setMode('back')">Capture Back</button>
+
+  <button onclick="setMode('edge')" class="secondary">Add Green Edge Point</button>
+  <button onclick="clearEdges()" class="secondary">Clear Outline</button>
+
+  <button onclick="exportJSON()">Export Course JSON</button>
+</div>
+
+<div id="map"></div>
+
+<div id="status">Mode: None</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map = L.map("map").setView([53.387, -2.205], 17);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19
+}).addTo(map);
+
+let currentMode = null;
+let currentHole = null;
+
+let courseData = {};
+let edgePoints = [];
+let edgeLayer = null;
+
+function setMode(mode){
+  currentMode = mode;
+  currentHole = document.getElementById("holeSelect").value;
+  if(!currentHole) return alert("Select hole first");
+
+  if(!courseData[currentHole]) courseData[currentHole] = {};
+  document.getElementById("status").textContent = "Mode: " + mode;
+}
+
+navigator.geolocation.watchPosition(
+  pos=>{
+    const {latitude, longitude} = pos.coords;
+
+    if(currentMode && currentHole){
+
+      if(currentMode === "centre"){
+        courseData[currentHole].green = {lat:latitude, lng:longitude};
+      }
+
+      if(currentMode === "front"){
+        courseData[currentHole].greenFront = {lat:latitude, lng:longitude};
+      }
+
+      if(currentMode === "back"){
+        courseData[currentHole].greenBack = {lat:latitude, lng:longitude};
+      }
+
+      if(currentMode === "edge"){
+        edgePoints.push([latitude, longitude]);
+        drawEdges();
+        courseData[currentHole].greenShape = edgePoints;
+      }
+    }
+  },
+  err=>console.warn(err),
+  {enableHighAccuracy:true}
+);
+
+function drawEdges(){
+  if(edgeLayer) map.removeLayer(edgeLayer);
+  edgeLayer = L.polygon(edgePoints, {
+    color:"#007AFF",
+    fillOpacity:0.2
+  }).addTo(map);
+}
+
+function clearEdges(){
+  edgePoints = [];
+  if(edgeLayer) map.removeLayer(edgeLayer);
+  if(currentHole && courseData[currentHole]){
+    delete courseData[currentHole].greenShape;
+  }
+}
+
+function exportJSON(){
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(courseData, null, 2));
+  const dl = document.createElement("a");
+  dl.setAttribute("href", dataStr);
+  dl.setAttribute("download", "green-data.json");
+  document.body.appendChild(dl);
+  dl.click();
+  dl.remove();
+}
+</script>
+
+</body>
+</html>
