@@ -283,10 +283,15 @@ button.pill{
 <div class="footerBar">
   <div class="footerInner">
     <div class="footerActions">
-      <button class="secondary pill" title="Add YardageBook.json" onclick="yardageFile.click()">➕</button>
-      <button class="secondary pill" title="Clear stored club yardages" onclick="clearYardageBook()">🗑️</button>
-      <button class="secondary pill" id="compassToggleBtn" title="Toggle compass" onclick="toggleCompass()">🧭</button>
-    </div>
+  <button class="secondary pill" title="Add YardageBook.json" onclick="yardageFile.click()">➕</button>
+  <button class="secondary pill" title="Clear stored club yardages" onclick="clearYardageBook()">🗑️</button>
+  <button class="secondary pill" id="compassToggleBtn" title="Toggle compass" onclick="toggleCompass()">🧭</button>
+
+  <!-- Admin Button -->
+  <a href="capturetheflag.html" style="text-decoration:none;">
+  <button class="secondary pill" title="Admin Green Capture" onclick="openAdmin()">⚙️</button>
+  </a>
+</div>
     <div class="footerText">Powered by ForeThought.site • An Apple Geek Product</div>
     <div class="footerText">v1.0.2</div>
     <div class="footerText">Create a Yardage Gapping Table <a href="https://forethought.site/yardagebook.html">Here</a></div>
@@ -306,6 +311,30 @@ button.pill{
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+
+function openAdmin(){
+  const key = "ft_admin_ok";
+  const until = parseInt(localStorage.getItem(key) || "0", 10);
+  const now = Date.now();
+
+  if(until > now){
+    window.location.href = "capture.html";
+    return;
+  }
+
+  const pw = prompt("Admin password:");
+  if(pw === null) return;
+
+  const ADMIN_PASSWORD = "forethought";
+
+  if(pw === ADMIN_PASSWORD){
+    // remember for 30 days
+    localStorage.setItem(key, String(now + 30*24*60*60*1000));
+    window.location.href = "capture.html";
+  } else {
+    alert("Nope.");
+  }
+}
 /* =========================================================
    Yardage Book v1.0.2
    - Hole view + Green view
