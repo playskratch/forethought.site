@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>ForeThought Yardage Builder</title>
   <meta name="description" content="Create and download a YardageBook.json file for Lesson Logger and ForeThought." />
 
@@ -29,33 +28,6 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
-    }
-
-    .topnav {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 18px 18px 0;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .topnav a {
-      color: var(--green);
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    .topnav a:hover {
-      text-decoration: underline;
-    }
-
-    .navlinks {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
     }
 
     header {
@@ -220,21 +192,11 @@
     .mobile-list { display: none; }
 
     @media (max-width: 720px) {
-      .topnav {
-        justify-content: center;
-        text-align: center;
-      }
-
-      .navlinks {
-        justify-content: center;
-      }
-
       header { padding-top: 28px; }
 
       .brand { font-size: 1.75rem; }
 
       .table-wrap { display: none; }
-
       .mobile-list {
         display: grid;
         gap: 12px;
@@ -273,16 +235,6 @@
 </head>
 
 <body>
-  <nav class="topnav">
-    <a href="index.html">ForeThought</a>
-
-    <div class="navlinks">
-      <a href="lesson-logger-support.html">Lesson Logger Support</a>
-      <a href="lesson-logger-privacy.html">Privacy Policy</a>
-      <a href="yardage-builder.html">Yardage Builder</a>
-    </div>
-  </nav>
-
   <header>
     <div class="brand">ForeThought</div>
     <div class="tagline">Yardage Book Builder</div>
@@ -302,12 +254,10 @@
         <button onclick="addClub()">Add Club</button>
         <button onclick="loadExample()">Load Example</button>
         <button onclick="copyJSON()">Copy JSON</button>
-
         <label class="file-label">
           Import Existing JSON
           <input type="file" accept=".json,application/json" onchange="importJSON(event)" />
         </label>
-
         <button class="danger" onclick="resetClubs()">Reset</button>
       </div>
     </section>
@@ -326,7 +276,6 @@
               <th></th>
             </tr>
           </thead>
-
           <tbody id="clubRows"></tbody>
         </table>
       </div>
@@ -387,23 +336,11 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>
-            <input value="${escapeHTML(club.name)}" oninput="updateClub(${index}, 'name', this.value)" placeholder="Club name" />
-          </td>
-
-          <td>
-            <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.carry}" oninput="updateClub(${index}, 'carry', this.value)" placeholder="Carry" />
-          </td>
-
-          <td>
-            <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.total}" oninput="updateClub(${index}, 'total', this.value)" placeholder="Total" />
-          </td>
-
-          <td>
-            <button class="remove" onclick="removeClub(${index})" aria-label="Remove club">×</button>
-          </td>
+          <td><input value="${escapeHTML(club.name)}" oninput="updateClub(${index}, 'name', this.value)" placeholder="Club name" /></td>
+          <td><input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.carry}" oninput="updateClub(${index}, 'carry', this.value)" placeholder="Carry" /></td>
+          <td><input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.total}" oninput="updateClub(${index}, 'total', this.value)" placeholder="Total" /></td>
+          <td><button class="remove" onclick="removeClub(${index})">×</button></td>
         `;
-
         tbody.appendChild(tr);
 
         const card = document.createElement("div");
@@ -411,20 +348,16 @@
         card.innerHTML = `
           <div class="club-card-header">
             <strong>${escapeHTML(club.name || "New Club")}</strong>
-            <button class="remove" onclick="removeClub(${index})" aria-label="Remove club">×</button>
+            <button class="remove" onclick="removeClub(${index})">×</button>
           </div>
-
           <div class="club-grid">
             <div class="full">
               <input value="${escapeHTML(club.name)}" oninput="updateClub(${index}, 'name', this.value)" placeholder="Club name" />
             </div>
-
             <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.carry}" oninput="updateClub(${index}, 'carry', this.value)" placeholder="Carry" />
-
             <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.total}" oninput="updateClub(${index}, 'total', this.value)" placeholder="Total" />
           </div>
         `;
-
         mobile.appendChild(card);
       });
 
@@ -462,7 +395,6 @@
         { name: "GW", carry: "", total: "" },
         { name: "SW", carry: "", total: "" }
       ];
-
       render();
     }
 
@@ -524,7 +456,6 @@
       if (!file) return;
 
       const reader = new FileReader();
-
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
