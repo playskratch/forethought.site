@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ForeThought Yardage Builder</title>
+  <meta name="description" content="Create and download a YardageBook.json file for Lesson Logger and ForeThought." />
+
+  <style>
+    :root {
+      --bg: #f6f7f3;
+      --card: #ffffff;
+      --text: #17211b;
+      --muted: #667368;
+      --line: #dfe5dc;
+      --green: #245f3b;
+      --green2: #4f8b5f;
+      --danger: #b3261e;
+      --soft: #eef5ee;
+      --shadow: 0 18px 50px rgba(0,0,0,.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 42px 18px 18px;
+      text-align: center;
+    }
+
+    .brand {
+      font-weight: 800;
+      letter-spacing: -.04em;
+      font-size: 2.1rem;
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1, h2 {
+      margin: 0;
+      letter-spacing: -.03em;
+    }
+
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.25rem; }
+
+    p { color: var(--muted); }
+
+    button, .file-label {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--soft);
+      color: var(--green);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      color: white;
+    }
+
+    button.danger {
+      background: #fff1f0;
+      color: var(--danger);
+    }
+
+    button:hover, .file-label:hover {
+      filter: brightness(.98);
+    }
+
+    input[type="file"] { display: none; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-size: .85rem;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: 2px solid rgba(36,95,59,.18);
+      border-color: var(--green2);
+    }
+
+    input.invalid {
+      border-color: var(--danger);
+      background: #fff7f6;
+    }
+
+    .remove {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 12px;
+      color: var(--danger);
+      background: #fff1f0;
+    }
+
+    .warnings {
+      margin-top: 14px;
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .warnings ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    pre {
+      background: #101914;
+      color: #dff4e5;
+      border-radius: 18px;
+      padding: 18px;
+      overflow: auto;
+      font-size: .88rem;
+      min-height: 220px;
+    }
+
+    .mobile-list { display: none; }
+
+    @media (max-width: 720px) {
+      header { padding-top: 28px; }
+
+      .brand { font-size: 1.75rem; }
+
+      .table-wrap { display: none; }
+      .mobile-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .club-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        background: #fff;
+      }
+
+      .club-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .club-grid .full {
+        grid-column: 1 / -1;
+      }
+
+      .club-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .actions button, .file-label {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">ForeThought</div>
+    <div class="tagline">Yardage Book Builder</div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="topbar">
+        <div>
+          <h1>Create your YardageBook.json</h1>
+          <p>Enter your club distances, preview the JSON, then download a file ready for Lesson Logger.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" onclick="downloadJSON()">Download YardageBook.json</button>
+        <button onclick="addClub()">Add Club</button>
+        <button onclick="loadExample()">Load Example</button>
+        <button onclick="copyJSON()">Copy JSON</button>
+        <label class="file-label">
+          Import Existing JSON
+          <input type="file" accept=".json,application/json" onchange="importJSON(event)" />
+        </label>
+        <button class="danger" onclick="resetClubs()">Reset</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Clubs</h2>
+      <p>Carry and total are in yards. Total should normally be equal to or greater than carry.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Club</th>
+              <th>Carry</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="clubRows"></tbody>
+        </table>
+      </div>
+
+      <div id="mobileRows" class="mobile-list"></div>
+
+      <div id="warnings" class="warnings"></div>
+    </section>
+
+    <section class="card">
+      <h2>Live JSON Preview</h2>
+      <pre id="preview"></pre>
+    </section>
+  </main>
+
+  <script>
+    let clubs = [
+      { name: "Driver", carry: "", total: "" },
+      { name: "3W", carry: "", total: "" },
+      { name: "5W", carry: "", total: "" },
+      { name: "3i", carry: "", total: "" },
+      { name: "4i", carry: "", total: "" },
+      { name: "5i", carry: "", total: "" },
+      { name: "6i", carry: "", total: "" },
+      { name: "7i", carry: "", total: "" },
+      { name: "8i", carry: "", total: "" },
+      { name: "9i", carry: "", total: "" },
+      { name: "Wedge 44°", carry: "", total: "" },
+      { name: "Wedge 50°", carry: "", total: "" },
+      { name: "Wedge 56°", carry: "", total: "" }
+    ];
+
+    const exampleClubs = [
+      { name: "Driver", carry: 267, total: 278 },
+      { name: "3W", carry: 249, total: 263 },
+      { name: "5W", carry: 232, total: 245 },
+      { name: "3i", carry: 220, total: 230 },
+      { name: "4i", carry: 200, total: 215 },
+      { name: "5i", carry: 185, total: 192 },
+      { name: "6i", carry: 174, total: 178 },
+      { name: "7i", carry: 158, total: 164 },
+      { name: "8i", carry: 148, total: 153 },
+      { name: "9i", carry: 138, total: 144 },
+      { name: "Wedge 44°", carry: 129, total: 134 },
+      { name: "Wedge 50°", carry: 100, total: 105 },
+      { name: "Wedge 56°", carry: 75, total: 79 }
+    ];
+
+    function render() {
+      const tbody = document.getElementById("clubRows");
+      const mobile = document.getElementById("mobileRows");
+
+      tbody.innerHTML = "";
+      mobile.innerHTML = "";
+
+      clubs.forEach((club, index) => {
+        const carryInvalid = isInvalidCarryTotal(club);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input value="${escapeHTML(club.name)}" oninput="updateClub(${index}, 'name', this.value)" placeholder="Club name" /></td>
+          <td><input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.carry}" oninput="updateClub(${index}, 'carry', this.value)" placeholder="Carry" /></td>
+          <td><input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.total}" oninput="updateClub(${index}, 'total', this.value)" placeholder="Total" /></td>
+          <td><button class="remove" onclick="removeClub(${index})">×</button></td>
+        `;
+        tbody.appendChild(tr);
+
+        const card = document.createElement("div");
+        card.className = "club-card";
+        card.innerHTML = `
+          <div class="club-card-header">
+            <strong>${escapeHTML(club.name || "New Club")}</strong>
+            <button class="remove" onclick="removeClub(${index})">×</button>
+          </div>
+          <div class="club-grid">
+            <div class="full">
+              <input value="${escapeHTML(club.name)}" oninput="updateClub(${index}, 'name', this.value)" placeholder="Club name" />
+            </div>
+            <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.carry}" oninput="updateClub(${index}, 'carry', this.value)" placeholder="Carry" />
+            <input class="${carryInvalid ? "invalid" : ""}" type="number" min="0" value="${club.total}" oninput="updateClub(${index}, 'total', this.value)" placeholder="Total" />
+          </div>
+        `;
+        mobile.appendChild(card);
+      });
+
+      renderWarnings();
+      renderPreview();
+    }
+
+    function updateClub(index, key, value) {
+      clubs[index][key] = key === "name" ? value : value === "" ? "" : Number(value);
+      render();
+    }
+
+    function addClub() {
+      clubs.push({ name: "", carry: "", total: "" });
+      render();
+    }
+
+    function removeClub(index) {
+      clubs.splice(index, 1);
+      render();
+    }
+
+    function resetClubs() {
+      clubs = [
+        { name: "Driver", carry: "", total: "" },
+        { name: "3W", carry: "", total: "" },
+        { name: "5W", carry: "", total: "" },
+        { name: "4i", carry: "", total: "" },
+        { name: "5i", carry: "", total: "" },
+        { name: "6i", carry: "", total: "" },
+        { name: "7i", carry: "", total: "" },
+        { name: "8i", carry: "", total: "" },
+        { name: "9i", carry: "", total: "" },
+        { name: "PW", carry: "", total: "" },
+        { name: "GW", carry: "", total: "" },
+        { name: "SW", carry: "", total: "" }
+      ];
+      render();
+    }
+
+    function loadExample() {
+      clubs = JSON.parse(JSON.stringify(exampleClubs));
+      render();
+    }
+
+    function validClubs() {
+      return clubs
+        .filter(c => c.name.trim() && c.carry !== "" && c.total !== "")
+        .map(c => ({
+          name: c.name.trim(),
+          carry: Number(c.carry),
+          total: Number(c.total)
+        }));
+    }
+
+    function yardageBook() {
+      return {
+        type: "yardageBook",
+        source: "ForeThought",
+        generatedAt: new Date().toISOString(),
+        clubs: validClubs()
+      };
+    }
+
+    function renderPreview() {
+      document.getElementById("preview").textContent =
+        JSON.stringify(yardageBook(), null, 2);
+    }
+
+    function downloadJSON() {
+      const data = JSON.stringify(yardageBook(), null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "YardageBook.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    }
+
+    async function copyJSON() {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(yardageBook(), null, 2));
+        alert("JSON copied to clipboard.");
+      } catch {
+        alert("Could not copy JSON. Use the preview box instead.");
+      }
+    }
+
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+
+          if (!parsed.clubs || !Array.isArray(parsed.clubs)) {
+            alert("This JSON does not contain a valid clubs array.");
+            return;
+          }
+
+          clubs = parsed.clubs.map(c => ({
+            name: c.name ?? "",
+            carry: c.carry ?? "",
+            total: c.total ?? ""
+          }));
+
+          render();
+        } catch {
+          alert("Could not read this JSON file.");
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function isInvalidCarryTotal(club) {
+      return club.carry !== "" &&
+             club.total !== "" &&
+             Number(club.total) < Number(club.carry);
+    }
+
+    function renderWarnings() {
+      const messages = [];
+
+      clubs.forEach(c => {
+        if (isInvalidCarryTotal(c)) {
+          messages.push(`${c.name || "Unnamed club"} total is less than carry.`);
+        }
+      });
+
+      const completed = validClubs();
+
+      for (let i = 1; i < completed.length; i++) {
+        if (completed[i].carry > completed[i - 1].carry) {
+          messages.push(`${completed[i].name} carry is longer than ${completed[i - 1].name}. Check ordering or distance.`);
+        }
+      }
+
+      const box = document.getElementById("warnings");
+
+      if (!messages.length) {
+        box.innerHTML = "";
+        return;
+      }
+
+      box.innerHTML = `
+        <div>Check these before downloading:</div>
+        <ul>${messages.map(m => `<li>${escapeHTML(m)}</li>`).join("")}</ul>
+      `;
+    }
+
+    function escapeHTML(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    render();
+  </script>
+</body>
+</html>
