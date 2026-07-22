@@ -413,11 +413,19 @@
         }));
     }
 
+    // Lesson Logger / ForeThought expects a second-precision ISO 8601
+    // timestamp (yyyy-MM-dd'T'HH:mm:ss'Z'). The native Date#toISOString()
+    // always includes milliseconds (e.g. .375), which the app's decoder
+    // rejects, so we strip the fractional seconds here before writing it out.
+    function isoSecondsUTC(date) {
+      return date.toISOString().replace(/\.\d{3}Z$/, "Z");
+    }
+
     function yardageBook() {
       return {
         type: "yardageBook",
         source: "ForeThought",
-        generatedAt: new Date().toISOString(),
+        generatedAt: isoSecondsUTC(new Date()),
         clubs: validClubs()
       };
     }
