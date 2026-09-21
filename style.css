@@ -61,7 +61,7 @@ a:hover { color: var(--forest); }
   text-decoration: none;
 }
 .brand img {
-  width: 54px;
+  width: 165px;
   height: 54px;
   flex: 0 0 54px;
   object-fit: contain;
