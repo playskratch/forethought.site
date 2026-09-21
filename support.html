@@ -7,95 +7,28 @@
   <title>Lesson Logger Support</title>
   <meta name="description" content="Support page for Lesson Logger, your golf notebook in your pocket." />
 
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f6f7f3;
-      color: #1f2a24;
-      line-height: 1.6;
-    }
-
-    .wrap {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 56px 22px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 22px;
-      padding: 36px;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.08);
-      border: 1px solid rgba(0,0,0,0.06);
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 2.4rem;
-      letter-spacing: -0.04em;
-    }
-
-    .tagline {
-      font-size: 1.25rem;
-      color: #4d6b55;
-      margin: 0 0 28px;
-      font-weight: 600;
-    }
-
-    .contact {
-      background: #eef5ee;
-      padding: 18px 20px;
-      border-radius: 16px;
-      margin: 24px 0 34px;
-    }
-
-    a {
-      color: #256d3f;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    h2 {
-      margin-top: 34px;
-      font-size: 1.5rem;
-    }
-
-    .faq {
-      margin-top: 18px;
-    }
-
-    .faq-item {
-      padding: 18px 0;
-      border-top: 1px solid #e2e6df;
-    }
-
-    .faq-item h3 {
-      margin: 0 0 6px;
-      font-size: 1.05rem;
-    }
-
-    .faq-item p {
-      margin: 0;
-      color: #526057;
-    }
-
-    footer {
-      margin-top: 28px;
-      color: #778077;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="forethought-lab-logo.png" type="image/png" />
 </head>
 
-<body>
-  <main class="wrap">
-    <section class="card">
+<body class="page-support">
+  <nav class="topnav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="index.html" class="brand" aria-label="ForeThought home"><img src="forethought-lab-logo.png" alt=""><span>ForeThought<small>Golf Performance Hub</small></span></a>
+      </div>
+      <div class="nav-right">
+        <a href="features.html">Features</a>
+        <a href="lesson-logger.html">Lesson Logger</a>
+        <a href="yardagebook.html">Yardage Builder</a>
+        <a href="availability.html">Availability</a>
+        <a href="support.html" class="active">Support</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container policy-wrap">
+    <section class="policy-card">
       <h1>Lesson Logger Support</h1>
       <p class="tagline">Lesson Logger — Your golf notebook in your pocket.</p>
 
@@ -104,7 +37,7 @@
       </p>
 
       <div class="contact">
-        📧 <a href="mailto:support@forethought.site">support@forethought.site</a>
+        <span aria-hidden="true">✉</span> <a href="mailto:support@forethought.site">support@forethought.site</a>
       </div>
 
       <h2>Frequently Asked Questions</h2>
@@ -135,11 +68,9 @@
           <p>No. Your data remains under your control.</p>
         </div>
       </div>
-    </section>
 
-    <footer>
-      &copy; 2026 ForeThought. All rights reserved.
-    </footer>
+      <p class="policy-link"><a href="privacy.html">Read the Lesson Logger Privacy Policy →</a></p>
+    </section>
   </main>
 </body>
 </html>
