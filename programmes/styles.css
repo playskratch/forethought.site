@@ -36,7 +36,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 800; letter-spacing: -.04em; font-size: 1.35rem; }
-.brand-logo { width: 54px; height: 54px; display: block; object-fit: contain; flex: 0 0 54px; }
+.brand-logo { width: 165px; height: 54px; display: block; object-fit: contain; flex: 0 0 54px; }
 .brand small { display: block; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; line-height: 1.1; }
 .nav { display: flex; align-items: center; gap: 26px; }
 .nav a { text-decoration: none; font-size: .9rem; font-weight: 700; }
