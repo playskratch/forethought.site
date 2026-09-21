@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ForeThought guided programme details.">
+  <title>Programme — ForeThought</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="detail-page">
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="../index.html"><img class="brand-logo" src="../forethought-lab-logo.png" alt="ForeThought Golf Performance Lab"><span>ForeThought<small>Golf Performance Hub</small></span></a>
+      <nav class="nav" aria-label="Primary navigation"><a class="active" href="./">Programmes</a></nav>
+    </div>
+  </header>
+  <main id="programme-detail"></main>
+  <footer class="site-footer"><div class="shell footer-inner"><strong>ForeThought.</strong><span>Guided programmes for purposeful work.</span></div></footer>
+  <script src="programmes.js"></script>
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    const p = window.ForeThoughtProgrammes.find(item => item.id === id) || window.ForeThoughtProgrammes[0];
+    document.title = `${p.title} — ForeThought`;
+    document.querySelector('meta[name="description"]').content = p.summary;
+    document.querySelector('#programme-detail').innerHTML = `
+      <section class="detail-hero"><div class="shell">
+        <a class="back-link" href="./#${p.type}">← Back to all programmes</a>
+        <div class="detail-hero-grid"><div><p class="eyebrow">Guided ${p.type} programme</p><h1>${p.title}</h1><p class="strapline">${p.strapline}</p></div>
+          <aside class="purchase-card"><span class="price">${p.price}</span><a class="button button-primary" href="#purchase-coming-soon" aria-disabled="true">Buy programme</a><a class="button button-secondary" href="#download-coming-soon" aria-disabled="true">Download JSON</a><p class="purchase-note">Stripe checkout and protected downloads will be connected when the final programme files are supplied.</p></aside>
+        </div></div></section>
+      <section class="detail-content"><div class="shell detail-layout"><article>
+        <h2>About this programme</h2><p>${p.summary} ${p.strapline} The sessions progress in a deliberate order, giving you a clear starting point and enough structure to complete the work consistently without turning every visit into a planning exercise.</p>
+        <h2>What you’ll work towards</h2><ul class="outcome-list">${p.outcomes.map(x => `<li>${x}</li>`).join('')}</ul>
+        <h2>What’s included</h2><ul class="outcome-list">${p.includes.map(x => `<li>${x}</li>`).join('')}</ul>
+        <h2>How it works</h2><p>After purchase, download the supplied JSON file and import it into the supported ForeThought or Lesson Logger app. The programme will appear as a guided plan with ordered sessions, individual drills or exercises, coaching instructions and progress recording. Keep the original file somewhere safe so it can be imported again when required.</p>
+      </article><aside><div class="spec-card"><h3>Programme details</h3>
+        <div class="spec-row"><span>Category</span><strong>${p.type[0].toUpperCase() + p.type.slice(1)}</strong></div>
+        <div class="spec-row"><span>Length</span><strong>${p.weeks} weeks</strong></div>
+        <div class="spec-row"><span>Sessions</span><strong>${p.sessions}</strong></div>
+        <div class="spec-row"><span>Session time</span><strong>${p.minutes} min</strong></div>
+        <div class="spec-row"><span>Level</span><strong>${p.level}</strong></div>
+        <div class="spec-row"><span>Equipment</span><strong>${p.equipment}</strong></div>
+        <p class="provisional"><strong>Prototype content:</strong> programme name, copy, duration, price and final JSON download will be replaced with the confirmed product information.</p>
+      </div></aside></div></section>`;
+  </script>
+</body>
+</html>

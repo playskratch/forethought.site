@@ -5,40 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ForeThought Yardage Builder</title>
   <meta name="description" content="Create and download a YardageBook.json file for Lesson Logger and ForeThought." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="forethought-lab-logo.png" type="image/png" />
 
   <style>
     :root {
-      --bg: #f6f7f3;
-      --card: #ffffff;
-      --text: #17211b;
-      --muted: #667368;
-      --line: #dfe5dc;
-      --green: #245f3b;
-      --green2: #4f8b5f;
+      --bg: #f4f0e5;
+      --card: #fffdf7;
+      --text: #10281f;
+      --muted: #607168;
+      --line: rgba(16, 40, 31, .15);
+      --green: #123c2d;
+      --green2: #19764a;
       --danger: #b3261e;
-      --soft: #eef5ee;
-      --shadow: 0 18px 50px rgba(0,0,0,.08);
+      --soft: #e9e4d7;
+      --shadow: 0 22px 70px rgba(15, 48, 37, .10);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
     }
 
-    header {
-      padding: 42px 18px 18px;
+    .builder-header {
+      width: min(1100px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 52px 0 8px;
       text-align: center;
     }
 
-    .brand {
+    .builder-title {
       font-weight: 800;
       letter-spacing: -.04em;
-      font-size: 2.1rem;
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 1;
     }
 
     .tagline {
@@ -54,7 +59,7 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(0,0,0,.06);
+      border: 1px solid rgba(16,40,31,.11);
       border-radius: 24px;
       padding: 22px;
       box-shadow: var(--shadow);
@@ -94,7 +99,7 @@
     }
 
     button.primary {
-      background: linear-gradient(135deg, var(--green), var(--green2));
+      background: var(--green);
       color: white;
     }
 
@@ -192,9 +197,9 @@
     .mobile-list { display: none; }
 
     @media (max-width: 720px) {
-      header { padding-top: 28px; }
+      .builder-header { padding-top: 32px; }
 
-      .brand { font-size: 1.75rem; }
+      .builder-title { font-size: 2.55rem; }
 
       .table-wrap { display: none; }
       .mobile-list {
@@ -235,9 +240,24 @@
 </head>
 
 <body>
-  <header>
-    <div class="brand">ForeThought</div>
-    <div class="tagline">Yardage Book Builder</div>
+  <nav class="topnav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="index.html" class="brand" aria-label="ForeThought home"><img src="forethought-lab-logo.png" alt=""><span>ForeThought<small>Golf Performance Hub</small></span></a>
+      </div>
+      <div class="nav-right">
+        <a href="features.html">Features</a>
+        <a href="lesson-logger.html">Lesson Logger</a>
+        <a href="yardagebook.html" class="active">Yardage Builder</a>
+        <a href="availability.html">Availability</a>
+        <a href="programmes/" class="nav-programmes">Guided Programmes</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="builder-header">
+    <div class="builder-title">Build your bag.</div>
+    <div class="tagline">Create a YardageBook.json for Lesson Logger and ForeThought.</div>
   </header>
 
   <main>
